@@ -25,7 +25,13 @@ public class MySimpleMapReduceJob extends Configured implements Tool {
 		// The main map() function; the input key/value classes must match the first two above, and the key/value classes in your emit() statement must match the latter two above.
 		@Override
 		protected void map(IntWritable key, Text value, Context context) throws IOException, InterruptedException {
-			// ...
+
+			// For all pages:
+				// Get title
+				// Get out-links
+				// Make PR(p) = 1
+			// For all pages:
+				// Make PR(p) = newPR(p)
 		}
 
 		@Override
@@ -42,14 +48,14 @@ public class MySimpleMapReduceJob extends Configured implements Tool {
 			super.setup(context);
 			// ...
 		}
-		
+
 		// The main reduce() function; the input key/value classes must match the first two above, and the key/value classes in your emit() statement must match the latter two above.
 		// Make sure that the output key/value classes also match those set in your job's configuration (see below).
 		@Override
 		protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
 			// ...
 		}
-		
+
 		@Override
 		protected void cleanup(Context context) throws IOException, InterruptedException {
 			// ...
@@ -66,17 +72,22 @@ public class MySimpleMapReduceJob extends Configured implements Tool {
 		job.setJarByClass(MySimpleMapReduceJob.class);
 
 		// 2. Set mapper and reducer classes
-		// ...
+		job.setMapperClass(MyMapper.class);
+		job.setCombinerClass(MyReducer.class);
+		job.setReducerClass(MyReducer.class);
 
 		// 3. Set input and output format, mapper output key and value classes, and final output key and value classes
-		// ...
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(IntWritable.class);
+		job.setOutputFormatClass(TextOutputFormat.class);
 
 		// 4. Set input and output paths; remember, these will be HDFS paths or URLs
-		// ...
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
 		// 5. Set other misc configuration parameters (#reducer tasks, counters, env variables, etc.)
-		// ...
-
+		rounds = int(args[2])
 		// 6. Finally, submit the job to the cluster and wait for it to complete; set param to false if you don't want to see progress reports
 		boolean succeeded = job.waitForCompletion(true);
 		return (succeeded ? 0 : 1);
