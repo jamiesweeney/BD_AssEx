@@ -21,7 +21,7 @@ import org.apache.hadoop.mapreduce.lib.reduce.IntSumReducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-public class WordCount_v0 extends Configured implements Tool {
+public class WordCount_v1 extends Configured implements Tool {
 	static class Map extends org.apache.hadoop.mapreduce.Mapper<LongWritable,Text, Text, IntWritable> {
 		
 		private final static IntWritable one = new IntWritable(1);
@@ -30,10 +30,10 @@ public class WordCount_v0 extends Configured implements Tool {
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			String line = value.toString();
 			StringTokenizer tokenizer = new StringTokenizer(line);
-			while (tokenizer.hasMoreTokens()) {
+			String token = tokenizer.nextToken();
+			if (token.equals("REVISION"))
 				word.set(tokenizer.nextToken());
-				context.write(word, one);
-			}
+				context.write(word, one);	
 		}
 	}
 	
@@ -48,7 +48,7 @@ public class WordCount_v0 extends Configured implements Tool {
 	
 	public int run(String[] args) throws Exception {
 		Job job = Job.getInstance(getConf(), "WordCount-v1");
-		job.setJarByClass(WordCount_v0.class);
+		job.setJarByClass(WordCount_v1.class);
 		
 		job.setMapperClass(Map.class);
 		job.setCombinerClass(Reduce.class);
@@ -66,7 +66,7 @@ public class WordCount_v0 extends Configured implements Tool {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		System.exit(ToolRunner.run(new Configuration(), new WordCount_v0(), args));
+		System.exit(ToolRunner.run(new Configuration(), new WordCount_v1(), args));
 	}
 }
 	

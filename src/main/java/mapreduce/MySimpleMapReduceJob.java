@@ -4,11 +4,16 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -28,8 +33,7 @@ public class MySimpleMapReduceJob extends Configured implements Tool {
 
 			// For all pages:
 				// Get title
-				// Get out-links
-				// Make PR(p) = 1
+				// Get out-links				// Make PR(p) = 1
 			// For all pages:
 				// Make PR(p) = newPR(p)
 		}
@@ -87,7 +91,7 @@ public class MySimpleMapReduceJob extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
 		// 5. Set other misc configuration parameters (#reducer tasks, counters, env variables, etc.)
-		rounds = int(args[2])
+		int rounds = Integer.parseInt(args[2]);
 		// 6. Finally, submit the job to the cluster and wait for it to complete; set param to false if you don't want to see progress reports
 		boolean succeeded = job.waitForCompletion(true);
 		return (succeeded ? 0 : 1);
