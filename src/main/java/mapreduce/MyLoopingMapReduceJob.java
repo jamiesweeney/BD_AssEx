@@ -2,13 +2,17 @@ package mapreduce;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -20,111 +24,117 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import mapreduce.WordCount_v2.Map;
-import mapreduce.WordCount_v2.OtherInputFormat;
-import mapreduce.WordCount_v2.Reduce;
 
 public class MyLoopingMapReduceJob extends Configured implements Tool {
 
-	// Your mapper class; remember to set the input and output key/value class appropriately in the <...> part below.
-	static class MyMapper extends Mapper<IntWritable, Text, IntWritable, Text> {
+	// Mapper class for first iteration
+	static class MyFirstMapper extends Mapper<LongWritable, Text, Text, Text> {
+		
+		Text artN = new Text();
+		
 		@Override
 		protected void setup(Context context) throws IOException, InterruptedException {
 			super.setup(context);
-			// ...
 		}
 
-		// The main map() function; the input key/value classes must match the first two above, and the key/value classes in your emit() statement must match the latter two above.
-		@Override
-		protected void map(IntWritable key, Text value, Context context) throws IOException, InterruptedException {
-			String entry = value.toString();
-			String articleName;
-			Text src;
-			Text dst;
-			StringTokenizer tokenizer = new StringTokenizer(entry);
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+			String line = value.toString();
+			StringTokenizer tokenizer = new StringTokenizer(line);
 			while (tokenizer.hasMoreTokens()) {
 				String token = tokenizer.nextToken();
 				if (token.equals("REVISION")) {
-					articleName = tokenizer.nextToken();
-					src.set(articleName);
+					String a = tokenizer.nextToken();
+					a = tokenizer.nextToken();
+					artN.set(tokenizer.nextToken());
 				}
 				else if (token.equals("MAIN")) {
-					token = tokenizer.nextToken();
-					ArrayList<String> links = new ArrayList<String>();
-					while (token.equals("TALK") == false)  {
-						links.add(token);
+					while (token.equals("TALK") == false & tokenizer.hasMoreTokens())  {
+						token = tokenizer.nextToken();
+						Text t = new Text(token);
+						context.write(artN,t);
 					}
 				}
 			}
-			IntWritable totalW = new IntWritable(total);
-			context.write(word, totalW);
 		}
 
 		@Override
 		protected void cleanup(Context context) throws IOException, InterruptedException {
-			// ...
 			super.cleanup(context);
 		}
 	}
 
-	// Your reducer class; remember to set the input and output key/value class appropriately in the <...> part below.
-	static class MyReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+	// Reducer class for first iteration
+	static class MyFirstReducer extends Reducer<Text, Text, Text, MyWritable> {
+		
 		@Override
 		protected void setup(Context context) throws IOException, InterruptedException {
 			super.setup(context);
-			// ...
 		}
 		
-		// The main reduce() function; the input key/value classes must match the first two above, and the key/value classes in your emit() statement must match the latter two above.
-		// Make sure that the output key/value classes also match those set in your job's configuration (see below).
-		@Override
-		protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-			// ...
+		// Main reducing method
+		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+
+			Iterator<Text> iter = values.iterator();
+			if (iter.hasNext()) {
+			
+				ArrayList<String> links = new ArrayList<String>();
+				float rank = (float) 1.0;
+				
+				while (iter.hasNext()) {
+					links.add(iter.next().toString());
+				}
+				
+				
+				
+				MyWritable out = new MyWritable();
+				out.readFields(rank, links);
+				context.write(key,out);
+			}
 		}
 		
 		@Override
 		protected void cleanup(Context context) throws IOException, InterruptedException {
-			// ...
 			super.cleanup(context);
 		}
 	}
 
-	// Your main Driver method. Note: everything in this method runs locally at the client.
+	// Driver method - runs the job
 	public int run(String[] args) throws Exception {
 		
-		// 0. Instantiate a Job object; remember to pass the Driver's configuration on to the job
+		// Instantiate a Job object
 		Job job = Job.getInstance(getConf());
 
-		// 1. Set the jar name in the job's conf; thus the Driver will know which file to send to the cluster
+		// Set the jar name in the job's conf
 		job.setJarByClass(MyLoopingMapReduceJob.class);
 
-		// 2. Set mapper and reducer classes
-		job.setMapperClass(Map.class);
-		job.setCombinerClass(Reduce.class);
-		job.setReducerClass(Reduce.class);
+		// Set mapper and reducer classes
+		job.setMapperClass(MyFirstMapper.class);
+		//job.setCombinerClass(MyFirstReducer.class);
+		job.setReducerClass(MyFirstReducer.class);
 			
-		// 3. Set final output key and value classes
+		// Set final output key and value classes
 		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
+		job.setOutputValueClass(MyWritable.class);
+		
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		
 	
-		// 4. Get args variables
+	
+		// Get args variables
 		String inputPath = args[0];
 		String outputPath = args[1];
 		int numLoops = Integer.parseInt(args[2]);
 		
+		// For each job we want to do
 		boolean succeeded = false;
 		for (int i = 0; i < numLoops; i++) {
-			// 5. Set input and output format, mapper output key and value classes, and final output key and value classes
-			if (i == 0) {
-				FileInputFormat.setInputPaths(job, new Path(inputPath));
-				FileOutputFormat.setOutputPath(job, new Path(outputPath + "/" + Integer.toString(i)));
-			}else { 
-				FileInputFormat.setInputPaths(job, new Path(outputPath + "/" + Integer.toString(i-1)));
-				FileOutputFormat.setOutputPath(job, new Path(outputPath + "/" + Integer.toString(i)));
-			}
 			
-			job.setInputFormatClass(OtherInputFormat.class);
-			job.setOutputFormatClass(TextOutputFormat.class);
+			// Set input and output format, mapper output key and value classes, and final output key and value classes
+			FileInputFormat.setInputPaths(job, new Path(inputPath));
+			FileOutputFormat.setOutputPath(job, new Path(outputPath + "/" + Integer.toString(i)));
+			job.setInputFormatClass(MyInputFormat.class);
+			job.setOutputFormatClass(MyOutputFormat.class);
 
 			// 7. Finally, submit the job to the cluster and wait for it to complete; set param to false if you don't want to see progress reports
 			succeeded = job.waitForCompletion(true);

@@ -30,10 +30,12 @@ public class WordCount_v1 extends Configured implements Tool {
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			String line = value.toString();
 			StringTokenizer tokenizer = new StringTokenizer(line);
-			String token = tokenizer.nextToken();
-			if (token.equals("REVISION"))
-				word.set(tokenizer.nextToken());
-				context.write(word, one);	
+			while (tokenizer.hasMoreTokens()) {
+				String token = tokenizer.nextToken();
+				if (token.equals("REVISION"))
+					word.set(tokenizer.nextToken());
+					context.write(word, one);	
+			}
 		}
 	}
 	
