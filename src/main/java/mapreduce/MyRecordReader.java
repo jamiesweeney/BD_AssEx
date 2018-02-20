@@ -37,7 +37,7 @@ class MyRecordReader extends RecordReader<LongWritable, Text> {
 		fsin.seek(start);
 		
 		if (start != 0)
-		readRecord(false);
+			readRecord(false);
 	}
 	
 	

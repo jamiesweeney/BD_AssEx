@@ -1,0 +1,1 @@
+INDEX VERSION 1.130+/home/2137284s/Desktop/BD_AssEx/.metadata/.plugins/org.eclipse.jdt.core
