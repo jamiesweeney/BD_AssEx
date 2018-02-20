@@ -14,8 +14,11 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
+
+// Defines a record reader for first iteration, splits file by empty line
+// So each record is one single edit record
 class MyRecordReader extends RecordReader<LongWritable, Text> {
-	private final byte[] recordSeparator = "\n\n".getBytes();
+	private final byte[] recordSeparator = "\n\n".getBytes();			// This specifies what to split records with
 	private FSDataInputStream fsin;
 	private long start, end;
 	private boolean stillInChunk = true;

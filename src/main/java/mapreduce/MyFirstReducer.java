@@ -10,6 +10,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
 
+// Reducer for first iteration (setup)
 class MyFirstReducer extends Reducer<Text, Text, Text, Text> {
 	
 	@Override
@@ -17,7 +18,6 @@ class MyFirstReducer extends Reducer<Text, Text, Text, Text> {
 		super.setup(context);
 	}
 	
-	// Main reducing method
 	public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
 		Text val = null;
@@ -30,7 +30,8 @@ class MyFirstReducer extends Reducer<Text, Text, Text, Text> {
 		int rev = 0;
 		int revID;			
 		float pageRank = (float) 1.0;
-		
+	
+		// Collect all (source, dest) pairs for source
 		Iterator<Text> iter = values.iterator();
 		if (iter.hasNext()) {
 		
@@ -38,6 +39,7 @@ class MyFirstReducer extends Reducer<Text, Text, Text, Text> {
 			parts = value.split(" ");
 			revID = Integer.parseInt(parts[0]);
 			
+			// If current revision is newer, change links to new links
 			if (revID > rev) {
 				val = new Text(value);
 				rev = revID;
@@ -46,6 +48,7 @@ class MyFirstReducer extends Reducer<Text, Text, Text, Text> {
 			}
 		}
 		
+		// Write in format (source, (pageRank [links])
 		Text output = new Text(Float.toString(pageRank) + " " + links.toString().replaceAll(" ", ""));
 		
 		context.write(key, output);

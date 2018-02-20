@@ -11,6 +11,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
+// Mapper for the first iteration (setup)
 class MyFirstMapper extends Mapper<LongWritable, Text, Text, Text> {
 	
 	@Override
@@ -35,6 +36,7 @@ class MyFirstMapper extends Mapper<LongWritable, Text, Text, Text> {
 	
 		String outLinks = "";
 		
+		// Create the set of links
 		Boolean first = true;
 		for (String link: links) {
 			if (first) {
@@ -44,6 +46,7 @@ class MyFirstMapper extends Mapper<LongWritable, Text, Text, Text> {
 			}
 		}
 		
+		// Format and write
 		outLinks = linksSet.toString().replaceAll(" ", "");
 		String output = revID + " " + outLinks;
 		

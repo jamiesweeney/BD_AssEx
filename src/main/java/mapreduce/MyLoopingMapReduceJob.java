@@ -30,7 +30,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import com.sun.xml.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
-
+// Performs a looped mapreduce job to calculate the pagerank of pages in wikipedia edit history
 public class MyLoopingMapReduceJob extends Configured implements Tool {
 
 	// Driver method - runs the job
@@ -46,6 +46,7 @@ public class MyLoopingMapReduceJob extends Configured implements Tool {
 		for (int i = 0; i <= numLoops; i++) {
 				
 			// Instantiate a Job object
+			// We must do this each time to avoid previous job interfering
 			Job job = Job.getInstance(getConf());
 
 			// Set the jar name in the job's conf

@@ -7,7 +7,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
 
-//Reducer class for first iteration
+//Reducer class for last iteration
+//Same as MyPageRankReducer except it does not print links in output
 class MyLastReducer extends Reducer<Text, Text, Text, Text> {
 	
 	@Override
@@ -19,6 +20,8 @@ class MyLastReducer extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
 		Iterator<Text> iter = values.iterator();
+		
+		// Collect sum of new additions to page rank
 		if (iter.hasNext()) {
 			float sum = (float) 0;
 			
@@ -31,6 +34,7 @@ class MyLastReducer extends Reducer<Text, Text, Text, Text> {
 				
 			}
 			
+			// Calculate new rank and write in format (page, pageRank)
 			float newRank = (float) ((float)0.15 + ((float)0.85*sum));
 			Text output = new Text(Float.toString(newRank));
 			
